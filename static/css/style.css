@@ -1,0 +1,124 @@
+/* ---------- Цвета и тема ---------- */
+:root {
+  --bg: #F6EFE4;
+  --ink: #2A2118;
+  --muted: #6A5B4B;
+  --card: #FFFDF9;
+  --line: #E0D3BF;
+  --accent: #2F5D46;   /* хвойный зелёный: кнопки и акценты */
+  --on: #FFFFFF;       /* текст на акценте */
+  --wood: #B5562B;     /* тёплый акцент: цены */
+  --error: #B3261E;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1A1713;
+    --ink: #F1E9DC;
+    --muted: #B3A592;
+    --card: #241F19;
+    --line: #3A3229;
+    --accent: #8FC3A3;
+    --on: #14211A;
+    --wood: #E58A5B;
+    --error: #FF8A80;
+  }
+}
+
+/* ---------- База ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-padding-top: 72px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 'Nunito Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; }
+h1, h2, h3, .logo { font-family: 'Bitter', Georgia, 'Times New Roman', serif; font-weight: 700; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(34px, 6.5vw, 58px); }
+h2 { font-size: clamp(26px, 4.5vw, 34px); margin-bottom: 18px; }
+h3 { font-size: 19px; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--wood); outline-offset: 2px; }
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+.sec { padding-top: 56px; padding-bottom: 8px; }
+.sub { color: var(--muted); font-size: 15px; margin: -8px 0 22px; max-width: 62ch; }
+
+/* ---------- Шапка ---------- */
+.note { background: var(--accent); color: var(--on); font-size: 13px; text-align: center; padding: 6px 12px; font-weight: 600; }
+header { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 60px; }
+.logo { font-size: 22px; text-decoration: none; }
+nav { display: flex; gap: 22px; align-items: center; }
+nav a { text-decoration: none; font-size: 15px; }
+
+/* ---------- Кнопки ---------- */
+.btn { display: inline-block; background: var(--accent); color: var(--on); border: 0; border-radius: 8px; padding: 14px 26px; font: 700 16px 'Nunito Sans', system-ui, sans-serif; text-decoration: none; cursor: pointer; }
+.btn.sm { padding: 9px 16px; font-size: 14px; }
+.btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--line); }
+.btn:disabled { opacity: .6; cursor: wait; }
+.link { background: none; border: 0; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; cursor: pointer; }
+
+/* ---------- Первый экран ---------- */
+.hero { padding: 72px 0 56px; border-bottom: 1px solid var(--line); background-image: repeating-linear-gradient(90deg, transparent 0 78px, var(--line) 78px 80px); }
+.lead { font-size: 18px; color: var(--muted); max-width: 52ch; margin: 18px 0 28px; }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ---------- Каталог ---------- */
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+.filters button { background: transparent; color: var(--ink); border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 18px; font: 600 15px 'Nunito Sans', sans-serif; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--accent); color: var(--on); border-color: var(--accent); }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.card .meta { color: var(--muted); font-size: 14px; margin: 0; }
+.card .desc { color: var(--muted); font-size: 15px; margin: 0; flex: 1; }
+.card .buy { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; }
+.price { font: 700 20px 'Bitter', Georgia, serif; color: var(--wood); }
+.out { color: var(--muted); font-size: 14px; font-weight: 700; }
+.ph { aspect-ratio: 16/10; border-radius: 8px; margin-bottom: 6px; border: 1px solid var(--line); }
+.ph-barrel { background: repeating-linear-gradient(90deg, #C79A64 0 18px, #B98B55 18px 20px); border-radius: 40px; }
+.ph-frame { background: #A9B7A0; background-image: linear-gradient(#8FA286 2px, transparent 2px), linear-gradient(90deg, #8FA286 2px, transparent 2px); background-size: 28px 28px; }
+.ph-timber { background: repeating-linear-gradient(0deg, #B07A4A 0 22px, #9C6A3E 22px 24px); }
+
+/* ---------- Этапы и FAQ ---------- */
+.steps { list-style: none; counter-reset: s; margin: 0; padding: 0; display: grid; gap: 14px; max-width: 720px; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; }
+.steps li::before { content: counter(s); display: grid; place-items: center; width: 44px; height: 44px; background: var(--accent); color: var(--on); font: 700 20px 'Bitter', serif; border-radius: 8px; }
+details { border-bottom: 1px solid var(--line); padding: 14px 0; }
+summary { cursor: pointer; font-weight: 700; }
+details p { margin: 8px 0 0; color: var(--muted); }
+
+/* ---------- Форма ---------- */
+.two { display: grid; grid-template-columns: 1.2fr 1fr; gap: 36px; }
+form#lead-form { display: grid; gap: 16px; max-width: 480px; }
+label { display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+input, select, textarea { font: 16px 'Nunito Sans', system-ui, sans-serif; padding: 12px 14px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); width: 100%; }
+textarea { resize: vertical; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.check input { width: 20px; height: 20px; margin-top: 2px; flex: none; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.err { color: var(--error); min-height: 1.4em; font-size: 15px; }
+.ok { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 22px; max-width: 480px; }
+dl { margin: 0; }
+dt { color: var(--muted); font-size: 14px; margin-top: 14px; }
+dt:first-child { margin-top: 0; }
+dd { margin: 2px 0 0; }
+footer.f { margin-top: 56px; border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 14px; }
+
+/* ---------- Админка (/admin) ---------- */
+.admin { padding: 32px 20px 56px; }
+.admin h1 { font-size: 32px; }
+.tabs { display: flex; gap: 8px; margin: 18px 0 22px; }
+.tab { background: transparent; color: var(--ink); border: 1.5px solid var(--line); border-radius: 8px; padding: 9px 18px; font: 700 15px 'Nunito Sans', sans-serif; cursor: pointer; }
+.tab.on { background: var(--accent); color: var(--on); border-color: var(--accent); }
+.pform { display: grid; gap: 14px; max-width: 520px; margin: 18px 0 8px; padding: 20px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.pform h2 { font-size: 22px; margin: 0; }
+.row-btns { display: flex; gap: 10px; }
+.tablewrap { overflow-x: auto; margin-top: 20px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 700; font-size: 14px; }
+td .link { margin-right: 14px; }
+
+/* ---------- Телефон ---------- */
+@media (max-width: 760px) {
+  .hide-sm { display: none; }
+  .grid3, .two { grid-template-columns: 1fr; }
+  .hero { padding: 48px 0 40px; }
+}

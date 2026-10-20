@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: banya-demo
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: ADMIN_PASSWORD
+        sync: false   # Render спросит значение при создании, в Git его нет

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Сруб и пар — бани и сауны под ключ</title>
+  <meta name="description" content="Демо-сайт магазина бань: каталог с ценами, заявка, админка для владельца.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🪵%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="note">Демо-сайт: компания, товары и цены вымышлены. Не вводите в форму реальные данные.</div>
+
+  <header>
+    <div class="wrap bar">
+      <a class="logo" href="#top">Сруб и пар</a>
+      <nav aria-label="Основное меню">
+        <a class="hide-sm" href="#catalog">Каталог</a>
+        <a class="hide-sm" href="#process">Как заказать</a>
+        <a class="hide-sm" href="#contacts">Контакты</a>
+        <a class="btn sm" href="#request">Оставить заявку</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap">
+        <h1>Бани и сауны под ключ</h1>
+        <p class="lead">Готовые модели с ценой на сайте: выберите баню в каталоге и оставьте заявку. Доставим и соберём на вашем участке.</p>
+        <div class="cta">
+          <a class="btn" href="#catalog">Смотреть каталог</a>
+          <a class="btn ghost" href="#process">Как заказать</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="catalog" class="wrap sec">
+      <h2>Каталог</h2>
+      <p class="sub">Товары и цены редактируются в админке, без правки кода. Фото в демо заменены заглушками.</p>
+      <div class="filters" id="filters" role="group" aria-label="Фильтр по типу"></div>
+      <div class="grid3" id="grid"><p class="sub">Загружаем каталог…</p></div>
+    </section>
+
+    <section id="process" class="wrap sec">
+      <h2>Как заказать</h2>
+      <ol class="steps">
+        <li><div><b>Выбираете модель.</b> В каталоге или по консультации с менеджером.</div></li>
+        <li><div><b>Оставляете заявку.</b> Мы перезваниваем и уточняем детали.</div></li>
+        <li><div><b>Договор и оплата.</b> Условия и порядок оплаты фиксируются в договоре.</div></li>
+        <li><div><b>Доставка и сборка.</b> Привозим на участок и собираем.</div></li>
+      </ol>
+    </section>
+
+    <section class="wrap sec">
+      <h2>Частые вопросы</h2>
+      <details><summary>Печь входит в стоимость?</summary><p>Нет, печь подбирается отдельно под размер парной. Мы поможем выбрать.</p></details>
+      <details><summary>Нужен ли фундамент?</summary><p>Для большинства моделей нужна ровная площадка или лёгкий фундамент. Детали обсудим по телефону.</p></details>
+      <details><summary>Можно ли изменить размеры?</summary><p>Да, под заказ. Оставьте заявку и напишите пожелания в комментарии.</p></details>
+    </section>
+
+    <section id="request" class="wrap sec">
+      <h2>Оставить заявку</h2>
+      <div class="two">
+        <div>
+          <form id="lead-form" novalidate>
+            <label>Модель
+              <select id="f-product"><option value="">Пока не выбрал, нужна консультация</option></select>
+            </label>
+            <label>Ваше имя<input id="f-name" autocomplete="given-name" maxlength="60"></label>
+            <label>Телефон<input id="f-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 900 000-00-00" maxlength="30"></label>
+            <label>Комментарий (необязательно)<textarea id="f-comment" rows="3" maxlength="500"></textarea></label>
+            <div class="hp" aria-hidden="true"><label>Сайт<input id="f-website" tabindex="-1" autocomplete="off"></label></div>
+            <label class="check"><input type="checkbox" id="f-consent"><span>Согласен на обработку персональных данных, <a href="#privacy">политика конфиденциальности</a></span></label>
+            <div class="err" id="form-error" role="alert"></div>
+            <button class="btn" type="submit" id="submit-btn">Отправить заявку</button>
+          </form>
+          <div class="ok" id="form-ok" hidden><b>Заявка принята.</b><br>Это демо: никто не позвонит. Заявка сохранена в базе проекта и видна владельцу в закрытой админке.</div>
+        </div>
+        <dl id="contacts">
+          <dt>Адрес</dt><dd>г. Ваш город, ул. Примерная, 10</dd>
+          <dt>Часы работы</dt><dd>Пн–Сб, 9:00 – 19:00</dd>
+          <dt>Телефон</dt><dd>+7 900 000-00-00</dd>
+          <dt>Почта</dt><dd>info@srub-i-par.example</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section id="privacy" class="wrap sec">
+      <h2>Политика конфиденциальности</h2>
+      <p class="sub">Демо-страница. В реальном проекте здесь текст политики, подготовленный для конкретной компании: какие данные собираются, зачем, где хранятся и как их удалить.</p>
+    </section>
+  </main>
+
+  <footer class="f"><div class="wrap">Концепт сайта для магазина бань. Хотите такой же? Напишите автору.</div></footer>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Админка — Сруб и пар</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="wrap admin">
+    <h1>Админка</h1>
+    <p class="sub"><a href="/">Открыть сайт</a></p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab on" type="button" data-tab="products" role="tab">Товары</button>
+      <button class="tab" type="button" data-tab="leads" role="tab">Заявки</button>
+    </div>
+
+    <section id="tab-products">
+      <button class="btn sm" type="button" id="add-btn">Добавить товар</button>
+
+      <form id="p-form" class="pform" hidden novalidate>
+        <h2 id="p-title">Новый товар</h2>
+        <label>Название<input id="pf-name" maxlength="80"></label>
+        <label>Тип<select id="pf-category"></select></label>
+        <label>Размер и состав<input id="pf-size" maxlength="60"></label>
+        <label>Цена, ₽<input id="pf-price" type="number" inputmode="numeric" min="1000" max="5000000"></label>
+        <label>Описание<textarea id="pf-desc" rows="3" maxlength="400"></textarea></label>
+        <label class="check"><input type="checkbox" id="pf-stock" checked><span>В наличии (товар можно заказать)</span></label>
+        <div class="err" id="pf-error" role="alert"></div>
+        <div class="row-btns">
+          <button class="btn sm" type="submit" id="pf-save">Сохранить</button>
+          <button class="btn sm ghost" type="button" id="pf-cancel">Отмена</button>
+        </div>
+      </form>
+
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Название</th><th>Тип</th><th>Цена</th><th>В наличии</th><th></th></tr></thead>
+          <tbody id="p-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tab-leads" hidden>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>№</th><th>Время (UTC)</th><th>Имя</th><th>Телефон</th><th>Модель</th><th>Комментарий</th></tr></thead>
+          <tbody id="l-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="/static/js/admin.js"></script>
+</body>
+</html>
