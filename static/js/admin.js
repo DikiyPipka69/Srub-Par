@@ -5,6 +5,7 @@ const rub = (n) => new Intl.NumberFormat("ru-RU").format(n) + " ₽";
 
 let categories = [];
 let products = [];
+let flashId = null;   // строка, которую подсветить после сохранения
 let editingId = null;  // null: создаём новый товар, число: правим существующий
 
 function el(tag, text, cls) {
@@ -37,6 +38,7 @@ function renderProducts() {
   body.replaceChildren();
   for (const p of products) {
     const tr = el("tr");
+    tr.dataset.id = String(p.id);
     const actions = el("td");
     const edit = el("button", "Изменить", "link");
     edit.type = "button";
@@ -59,6 +61,14 @@ async function loadProducts() {
     for (const c of categories) sel.appendChild(new Option(c.name, c.id));
   }
   renderProducts();
+  flashRow();
+}
+
+function flashRow() {
+  if (flashId === null) return;
+  const row = $("p-body").querySelector(`tr[data-id="${flashId}"]`);
+  flashId = null;
+  if (row) row.classList.add("flash");
 }
 
 function openForm(product) {
@@ -109,8 +119,10 @@ $("p-form").addEventListener("submit", async (event) => {
   err.textContent = "";
   $("pf-save").disabled = true;
   try {
-    if (editingId === null) await api("POST", "/api/admin/products", payload);
-    else await api("PUT", `/api/admin/products/${editingId}`, payload);
+    const saved = editingId === null
+      ? await api("POST", "/api/admin/products", payload)
+      : await api("PUT", `/api/admin/products/${editingId}`, payload);
+    flashId = saved.id;
     closeForm();
     await loadProducts();
   } catch (e) {

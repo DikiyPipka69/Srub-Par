@@ -1,4 +1,5 @@
 """Демо-сайт магазина бань «Сруб и пар»: FastAPI + SQLite + админка для товаров."""
+import logging
 import os
 import re
 import secrets
@@ -7,36 +8,47 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from . import db, ratelimit
+from . import db, formtoken, ratelimit, security
 
 load_dotenv()  # читает .env при локальном запуске; на Render переменные задаются в панели
 
+log = logging.getLogger("app.security")
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 DOCS_ENABLED = bool(os.environ.get("ENABLE_DOCS"))
-DOCS_PATHS = ("/docs", "/redoc", "/openapi.json")
 BAD_DATA = "Проверьте введённые данные"
+STALE_FORM = "Форма устарела или отправлена слишком быстро. Подождите секунду и нажмите «Отправить» ещё раз."
 CATEGORIES = {"barrel": "Бани-бочки", "frame": "Каркасные бани", "timber": "Бани из бруса"}
+MAX_PRODUCTS = 200        # больше товаров через админку добавить нельзя
+RATE_LIMIT_PER_MIN = int(os.environ.get("RATE_LIMIT_PER_MIN", "240"))  # запросов в минуту с одного IP
+ADMIN_FAIL_LIMIT = 10     # столько неудачных входов подряд...
+ADMIN_FAIL_WINDOW = 900   # ...за 15 минут закрывают вход с этого адреса
 
-CSP = (
-    "default-src 'self'; "
-    "style-src 'self' https://fonts.googleapis.com; "
-    "font-src https://fonts.gstatic.com; "
-    "img-src 'self' data:; "
-    "script-src 'self'; "
-    "connect-src 'self'; "
-    "base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
-)
+
+def client_ip(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+def production() -> bool:
+    return bool(os.environ.get("RENDER"))  # Render сам задаёт эту переменную
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     db.init()
+    password = os.environ.get("ADMIN_PASSWORD")
+    problem = security.admin_password_problem(password, production()) if password else None
+    if problem:
+        log.error("ADMIN_PASSWORD не подходит для боевого сервера (%s): админка отключена", problem)
     yield
 
 
@@ -46,21 +58,45 @@ app = FastAPI(
     redoc_url=None,
     openapi_url="/openapi.json" if DOCS_ENABLED else None,
 )
+app.add_middleware(security.BodyLimitMiddleware, max_bytes=security.MAX_BODY)
 
 
 @app.middleware("http")
-async def security_headers(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    if request.url.path not in DOCS_PATHS:  # Swagger грузит скрипты с CDN
-        response.headers["Content-Security-Policy"] = CSP
+async def guard(request: Request, call_next):
+    """Общий лимит запросов с одного IP и защитные заголовки на каждый ответ."""
+    path = request.url.path
+    ip = client_ip(request)
+    if path != "/api/health" and not ratelimit.allow(f"req:{ip}", RATE_LIMIT_PER_MIN, 60):
+        log.warning("слишком много запросов ip=%s path=%s", ip, path)
+        response = JSONResponse(
+            {"detail": "Слишком много запросов, подождите минуту"},
+            status_code=429,
+            headers={"Retry-After": "60"},
+        )
+    else:
+        response = await call_next(request)
+    for name, value in security.response_headers(path, request.url.scheme == "https").items():
+        response.headers[name] = value
     return response
+
+
+# Необязательно: пускать только запросы на свои домены (ALLOWED_HOSTS=example.com,www.example.com)
+_hosts = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "").split(",") if h.strip()]
+if _hosts:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=_hosts)
 
 
 @app.exception_handler(RequestValidationError)
 async def on_validation_error(request: Request, exc: RequestValidationError):
     return JSONResponse(status_code=422, content={"detail": BAD_DATA})
+
+
+@app.exception_handler(StarletteHTTPException)
+async def on_http_error(request: Request, exc: StarletteHTTPException):
+    # Для страниц сайта показываем красивую 404, для API оставляем JSON
+    if exc.status_code == 404 and not request.url.path.startswith("/api"):
+        return FileResponse(BASE_DIR / "static" / "404.html", status_code=404)
+    return await http_exception_handler(request, exc)
 
 
 class ProductIn(BaseModel):
@@ -80,6 +116,19 @@ class ProductIn(BaseModel):
             raise ValueError("неизвестная категория")
         return value
 
+    @field_validator("name")
+    @classmethod
+    def clean_name(cls, value: str) -> str:
+        value = re.sub(r"\s+", " ", security.clean_text(value))
+        if len(value) < 2:
+            raise ValueError("слишком короткое название")
+        return value
+
+    @field_validator("size", "description")
+    @classmethod
+    def clean_text(cls, value: str) -> str:
+        return security.clean_text(value)
+
 
 class Lead(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -89,7 +138,21 @@ class Lead(BaseModel):
     comment: str = Field(default="", max_length=500)
     consent: bool
     website: str = Field(default="", max_length=200)  # ловушка для ботов, у людей пусто
+    token: str = Field(min_length=10, max_length=100)  # одноразовый токен из /api/form-token
     product_id: int | None = Field(default=None, ge=1)
+
+    @field_validator("name")
+    @classmethod
+    def clean_name(cls, value: str) -> str:
+        value = re.sub(r"\s+", " ", security.clean_text(value))
+        if len(value) < 2:
+            raise ValueError("слишком короткое имя")
+        return value
+
+    @field_validator("comment")
+    @classmethod
+    def clean_comment(cls, value: str) -> str:
+        return security.clean_text(value)
 
     @field_validator("phone")
     @classmethod
@@ -108,7 +171,7 @@ class Lead(BaseModel):
 
 
 # ---------- публичные маршруты ----------
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])
 def health():
     return {"status": "ok"}
 
@@ -121,37 +184,62 @@ def products():
     }
 
 
+@app.get("/api/form-token")
+def form_token(request: Request):
+    if not ratelimit.allow(f"tok:{client_ip(request)}", 30, 60):
+        raise HTTPException(status_code=429, detail="Слишком много запросов, подождите минуту")
+    return {"token": formtoken.issue()}
+
+
 @app.post("/api/lead")
 def create_lead(lead: Lead, request: Request):
+    ip = client_ip(request)
     if lead.website:  # заполнил бот: делаем вид, что всё хорошо, ничего не сохраняя
+        log.info("ловушка для ботов сработала ip=%s", ip)
         return {"ok": True}
+    status = formtoken.verify(lead.token)
+    if status != "ok":
+        log.info("токен формы отклонён (%s) ip=%s", status, ip)
+        raise HTTPException(status_code=400, detail=STALE_FORM)
     product_name = ""
     if lead.product_id is not None:
         product = db.get_product(lead.product_id)
         if product is None or not product["in_stock"]:
             raise HTTPException(status_code=422, detail=BAD_DATA)
         product_name = product["name"]  # название берём из базы, а не из запроса
-    ip = request.client.host if request.client else "unknown"
-    if not ratelimit.allow(ip):
+    if security.looks_like_spam(lead.name, lead.comment):
+        log.info("спам в тексте заявки ip=%s", ip)
+        return {"ok": True}
+    if not ratelimit.allow(f"lead:{ip}"):
+        log.warning("лимит заявок ip=%s", ip)
         raise HTTPException(status_code=429, detail="Слишком много заявок, попробуйте позже")
+    if db.has_recent_lead(lead.phone):  # повтор: двойной клик или спам
+        return {"ok": True}
     db.add_lead(lead.name, lead.phone, lead.comment, lead.product_id, product_name)
     return {"ok": True}
 
 
 # ---------- админка ----------
-security = HTTPBasic(auto_error=False)
+basic = HTTPBasic(auto_error=False)
 
 
-def admin_auth(creds: HTTPBasicCredentials | None = Depends(security)) -> None:
+def admin_auth(request: Request, creds: HTTPBasicCredentials | None = Depends(basic)) -> None:
     password = os.environ.get("ADMIN_PASSWORD")
-    if not password:
-        raise HTTPException(status_code=404)  # админка выключена, пока не задан пароль
+    if not password or security.admin_password_problem(password, production()):
+        raise HTTPException(status_code=404)  # админка выключена: пароля нет или он слабый
+    ip = client_ip(request)
+    fail_key = f"admin-fail:{ip}"
+    if ratelimit.count(fail_key, ADMIN_FAIL_WINDOW) >= ADMIN_FAIL_LIMIT:
+        raise HTTPException(status_code=429, detail="Слишком много неудачных попыток, попробуйте позже")
     ok = (
         creds is not None
         and secrets.compare_digest(creds.username.encode(), b"admin")
         and secrets.compare_digest(creds.password.encode(), password.encode())
     )
     if not ok:
+        if creds is not None:  # первый запрос браузера без пароля неудачей не считаем
+            ratelimit.hit(fail_key)
+            log.warning("неудачный вход в админку ip=%s", ip)
         raise HTTPException(status_code=401, headers={"WWW-Authenticate": "Basic"})
 
 
@@ -182,6 +270,8 @@ def admin_leads():
 
 @app.post("/api/admin/products", dependencies=admin_write)
 def admin_create_product(data: ProductIn):
+    if db.count_products() >= MAX_PRODUCTS:
+        raise HTTPException(status_code=409, detail="Достигнут предел числа товаров")
     return db.add_product(**data.model_dump())
 
 
@@ -200,7 +290,7 @@ def admin_delete_product(product_id: int):
     return {"ok": True}
 
 
-@app.get("/", include_in_schema=False)
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 def index():
     return FileResponse(BASE_DIR / "static" / "index.html")
 

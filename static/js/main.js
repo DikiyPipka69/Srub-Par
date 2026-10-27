@@ -88,6 +88,19 @@ const form = $("lead-form");
 const errorBox = $("form-error");
 const submitBtn = $("submit-btn");
 
+// Одноразовый токен формы: без него сервер заявку не принимает (защита от ботов).
+// Берём его сразу при загрузке страницы, а после любой неудачной отправки берём новый.
+let formToken = "";
+async function refreshToken() {
+  try {
+    const res = await fetch("/api/form-token");
+    if (res.ok) formToken = (await res.json()).token;
+  } catch {
+    formToken = "";
+  }
+}
+refreshToken();
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const name = $("f-name").value.trim();
@@ -101,27 +114,38 @@ form.addEventListener("submit", async (event) => {
   if (phone.replace(/\D/g, "").length < 10) { errorBox.textContent = "Введите телефон полностью, не меньше 10 цифр."; return; }
   if (!consent) { errorBox.textContent = "Поставьте галочку согласия, иначе заявку отправить нельзя."; return; }
 
+  if (!formToken) await refreshToken();
   errorBox.textContent = "";
   submitBtn.disabled = true;
+  submitBtn.setAttribute("aria-busy", "true");
   submitBtn.textContent = "Отправляем…";
   try {
     const res = await fetch("/api/lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone, comment, consent, website, product_id }),
+      body: JSON.stringify({ name, phone, comment, consent, website, product_id, token: formToken }),
     });
-    if (res.status === 429) {
-      errorBox.textContent = "Слишком много заявок. Попробуйте позже.";
-    } else if (!res.ok) {
-      errorBox.textContent = "Проверьте введённые данные. Возможно, товар уже недоступен: обновите страницу.";
-    } else {
+    if (res.ok) {
       form.hidden = true;
       $("form-ok").hidden = false;
+      return;
     }
+    formToken = "";  // токен одноразовый
+    if (res.status === 429) {
+      errorBox.textContent = "Слишком много запросов. Подождите минуту и попробуйте снова.";
+    } else if (res.status === 400) {
+      errorBox.textContent = "Форма устарела или отправлена слишком быстро. Подождите секунду и нажмите «Отправить» ещё раз.";
+    } else {
+      errorBox.textContent = "Проверьте введённые данные. Возможно, товар уже недоступен: обновите страницу.";
+    }
+    refreshToken();
   } catch {
     errorBox.textContent = "Нет связи с сервером. Попробуйте ещё раз.";
+    formToken = "";
+    refreshToken();
   } finally {
     submitBtn.disabled = false;
+    submitBtn.removeAttribute("aria-busy");
     submitBtn.textContent = "Отправить заявку";
   }
 });

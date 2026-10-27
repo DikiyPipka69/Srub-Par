@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
   <title>Сруб и пар — бани и сауны под ключ</title>
   <meta name="description" content="Демо-сайт магазина бань: каталог с ценами, заявка, админка для владельца.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🪵%3C/text%3E%3C/svg%3E">
@@ -10,6 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/motion.css">
+  <script src="/static/js/motion.js"></script>
 </head>
 <body>
   <div class="note">Демо-сайт: компания, товары и цены вымышлены. Не вводите в форму реальные данные.</div>
@@ -28,7 +31,7 @@
 
   <main id="top">
     <section class="hero">
-      <div class="wrap">
+      <div class="wrap stagger">
         <h1>Бани и сауны под ключ</h1>
         <p class="lead">Готовые модели с ценой на сайте: выберите баню в каталоге и оставьте заявку. Доставим и соберём на вашем участке.</p>
         <div class="cta">
@@ -38,16 +41,16 @@
       </div>
     </section>
 
-    <section id="catalog" class="wrap sec">
+    <section id="catalog" class="wrap sec reveal">
       <h2>Каталог</h2>
       <p class="sub">Товары и цены редактируются в админке, без правки кода. Фото в демо заменены заглушками.</p>
       <div class="filters" id="filters" role="group" aria-label="Фильтр по типу"></div>
-      <div class="grid3" id="grid"><p class="sub">Загружаем каталог…</p></div>
+      <div class="grid3 stagger" id="grid"><p class="sub">Загружаем каталог…</p></div>
     </section>
 
-    <section id="process" class="wrap sec">
+    <section id="process" class="wrap sec reveal">
       <h2>Как заказать</h2>
-      <ol class="steps">
+      <ol class="steps stagger">
         <li><div><b>Выбираете модель.</b> В каталоге или по консультации с менеджером.</div></li>
         <li><div><b>Оставляете заявку.</b> Мы перезваниваем и уточняем детали.</div></li>
         <li><div><b>Договор и оплата.</b> Условия и порядок оплаты фиксируются в договоре.</div></li>
@@ -55,14 +58,14 @@
       </ol>
     </section>
 
-    <section class="wrap sec">
+    <section class="wrap sec reveal">
       <h2>Частые вопросы</h2>
       <details><summary>Печь входит в стоимость?</summary><p>Нет, печь подбирается отдельно под размер парной. Мы поможем выбрать.</p></details>
       <details><summary>Нужен ли фундамент?</summary><p>Для большинства моделей нужна ровная площадка или лёгкий фундамент. Детали обсудим по телефону.</p></details>
       <details><summary>Можно ли изменить размеры?</summary><p>Да, под заказ. Оставьте заявку и напишите пожелания в комментарии.</p></details>
     </section>
 
-    <section id="request" class="wrap sec">
+    <section id="request" class="wrap sec reveal">
       <h2>Оставить заявку</h2>
       <div class="two">
         <div>
@@ -89,7 +92,7 @@
       </div>
     </section>
 
-    <section id="privacy" class="wrap sec">
+    <section id="privacy" class="wrap sec reveal">
       <h2>Политика конфиденциальности</h2>
       <p class="sub">Демо-страница. В реальном проекте здесь текст политики, подготовленный для конкретной компании: какие данные собираются, зачем, где хранятся и как их удалить.</p>
     </section>
